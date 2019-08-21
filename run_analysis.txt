@@ -1,0 +1,81 @@
+#Read data frames
+
+# FEATURES
+features <- read.table("features.txt") #List of all features
+head(features[2])
+
+
+# ACTIVITIES
+activities <- read.table("activity_labels.txt") #Links the class labels with their activity name
+head(activities[,2])
+actHeader <- c('act_code','act_label')
+colnames(activities)<-actHeader
+head(activities)
+
+
+# TRAIN
+x_train <- read.table("train/X_train.txt",header = FALSE, col.names = features[,2]) #Training set
+y_train <- read.table("train/y_train.txt") # Training labels
+subject_train <- read.table("train/subject_train.txt") #The subject who performed the activity for each window sample. Its range is from 1 to 30. 
+tail(subject_train)
+nrow(subject_train)
+#[1] 7352
+
+
+# TEST
+x_test <- read.table("test/X_test.txt", header = FALSE, col.names = features[,2]) #Test set
+y_test <- read.table("test/y_test.txt") # Test labels
+subject_test <- read.table("test/subject_test.txt")
+nrow(subject_test)
+#[1] 2947
+
+
+#1. Merges the training and the test sets to create one data set.
+#2. Extracts only the measurements on the mean and standard deviation for each measurement.
+#3. Uses descriptive activity names to name the activities in the data set
+#4. Appropriately labels the data set with descriptive variable names.
+#5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+
+x_set <-rbind(x_train,x_test)
+y_labels <-rbind(y_train,y_test)
+subjects <-rbind(subject_train, subject_test)
+
+head(y_labels)
+yHeader <- c('act_code')
+colnames(y_labels)<-yHeader
+head(y_labels)
+
+subjectHeader <- c('subject')
+colnames(subjects)<-subjectHeader
+head(subjects)
+
+
+nrow(x_set)
+#[1] 10299
+nrow(y_labels)
+#[1] 10299
+nrow(subjects)
+#[1] 10299
+
+
+mean_std_cols<-grep('std|mean',features[,2])
+x_subset <- x_set[, mean_std_cols]
+
+
+y_named_labels<-merge(y_labels, activities, by="act_code")
+all_data<-cbind(subjects, cbind(y_named_labels, x_subset))
+head(all_data)
+ncol(all_data)
+
+names(all_data)<-gsub("^t", "Time", names(all_data))
+names(all_data)<-gsub("^f", "Freq", names(all_data))
+names(all_data)<-gsub("BodyBody", "Body", names(all_data))
+names(all_data)<-gsub("mean", "Mean", names(all_data))
+names(all_data)<-gsub("std", "Std", names(all_data))
+names(all_data)<-gsub("\\.| ", "", names(all_data))
+
+
+tidy_data <- aggregate(all_data[,4:82], by=list(all_data$act_label,all_data$subject), FUN = mean)
+if(!file.exists("delivery")){dir.create("delivery")}
+write.table(tidy_data, "delivery/data.txt", row.name=FALSE)
