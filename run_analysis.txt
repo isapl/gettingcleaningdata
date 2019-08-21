@@ -76,6 +76,5 @@ names(all_data)<-gsub("std", "Std", names(all_data))
 names(all_data)<-gsub("\\.| ", "", names(all_data))
 
 
-tidy_data <- aggregate(all_data[,4:82], by=list(all_data$act_label,all_data$subject), FUN = mean)
-if(!file.exists("delivery")){dir.create("delivery")}
-write.table(tidy_data, "delivery/data.txt", row.name=FALSE)
+tidy_data <- aggregate(all_data[,4:82], by=list(all_data$subject, all_data$act_label), FUN = mean)
+write.table(tidy_data, "data.txt", row.name=FALSE)
